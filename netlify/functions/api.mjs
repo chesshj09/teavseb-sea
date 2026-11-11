@@ -149,12 +149,11 @@ export default async (req, context) => {
   const method = req.method;
   const cookies = parseCookies(req.headers.get("cookie"));
   const isSite = verifyToken(cookies[COOKIE_SITE], "site");
-  const isOwner = isSite && verifyToken(cookies[COOKIE_OWNER], "owner");
   const ip = context?.ip || req.headers.get("x-nf-client-connection-ip") || "unknown";
   const body = async () => (await req.json().catch(() => ({}))) || {};
 
   try {
-    if (r0 === "me") return respond({ site: isSite, owner: isOwner, ownerEnabled: !!OWNER_PASSWORD() });
+    if (r0 === "me") return respond({ site: isSite });
 
     if (r0 === "login" && method === "POST") {
       if (await isLocked("login", ip)) return fail("시도가 너무 많아요. 잠시 뒤에 다시 해 주세요.", 429);
@@ -172,19 +171,6 @@ export default async (req, context) => {
     }
 
     if (!isSite) return fail("먼저 비밀번호를 입력해 주세요.", 401);
-
-    if (r0 === "owner-login" && method === "POST") {
-      if (!OWNER_PASSWORD()) return fail("주인 비밀번호(OWNER_PASSWORD)가 아직 설정되지 않았어요.");
-      if (await isLocked("owner", ip)) return fail("시도가 너무 많아요. 잠시 뒤에 다시 해 주세요.", 429);
-      const b = await body();
-      if (safeEqual(String(b.password || ""), OWNER_PASSWORD())) {
-        await clearFails("owner", ip);
-        return respond({ ok: true }, 200, [cookie(COOKIE_OWNER, sign("owner", OWNER_TTL), OWNER_TTL)]);
-      }
-      await recordFail("owner", ip);
-      return fail("주인 비밀번호가 맞지 않아요.", 401);
-    }
-    if (r0 === "owner-logout" && method === "POST") return respond({ ok: true }, 200, [cookie(COOKIE_OWNER, "", 0)]);
 
     /* ----- 글 ----- */
     if (r0 === "posts") {
@@ -215,9 +201,8 @@ export default async (req, context) => {
       const post = await posts().get(key, { type: "json" });
       if (!post) return fail("글을 찾을 수 없어요.", 404);
 
-      // 비밀번호(또는 주인 권한) 확인
+      // 글 비밀번호 확인
       const authorize = async (pw) => {
-        if (isOwner) return true;
         if (await isLocked("post", ip)) return "locked";
         if (checkPw(post, pw)) {
           await clearFails("post", ip);
@@ -231,7 +216,7 @@ export default async (req, context) => {
         const b = await body();
         const ok = await authorize(String(b.password || ""));
         if (ok === "locked") return fail("시도가 너무 많아요. 잠시 뒤에 다시 해 주세요.", 429);
-        return ok ? respond({ ok: true, owner: isOwner }) : fail("비밀번호가 맞지 않아요.", 403);
+        return ok ? respond({ ok: true }) : fail("비밀번호가 맞지 않아요.", 403);
       }
       if (method === "GET") return respond({ post: publicPost(post) });
 
@@ -263,7 +248,6 @@ export default async (req, context) => {
     /* ----- 이미지 ----- */
     if (r0 === "upload" && method === "POST") {
       const kind = url.searchParams.get("kind") || "post";
-      if (kind === "decor" && !isOwner) return fail("꾸미기 이미지는 주인만 올릴 수 있어요.", 403);
       const type = (req.headers.get("content-type") || "").split(";")[0].trim();
       if (!/^image\/(jpeg|png|webp|gif)$/.test(type)) return fail("JPG, PNG, WEBP, GIF 이미지만 올릴 수 있어요.", 415);
       const buf = await req.arrayBuffer();
@@ -286,7 +270,6 @@ export default async (req, context) => {
     if (r0 === "settings") {
       if (method === "GET") return respond({ settings: await getSettings() });
       if (method === "PUT") {
-        if (!isOwner) return fail("주인만 바꿀 수 있어요.", 403);
         const cur = await getSettings();
         const next = { ...cur, ...sanitizeSettings(await body()) };
         await meta().setJSON("settings", next);
@@ -294,7 +277,6 @@ export default async (req, context) => {
       }
     }
     if (r0 === "playlist") {
-      if (!isOwner) return fail("주인만 바꿀 수 있어요.", 403);
       const cur = await getSettings();
       if (method === "POST") {
         const b = await body();

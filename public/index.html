@@ -221,7 +221,6 @@ footer.cp{position:relative;z-index:2;text-align:center;padding:0 0 28px;font-si
  <a class="brand" href="#/"><b data-site-title>테아프셉의 바다</b></a>
  <div class="topbar">
   <button class="pill" data-act="write">글·그림 올리기</button>
-  <button class="pill" id="ownerBtn" data-act="owner">주인 로그인</button>
   <button class="pill" data-act="logout">나가기</button>
  </div>
  <div class="app">
@@ -411,10 +410,7 @@ function renderChrome() {
   document.querySelectorAll('[data-site-title]').forEach((e) => (e.textContent = CONFIG.siteTitle));
   document.title = CONFIG.siteTitle;
   $('#copyright').textContent = `© ${CONFIG.year} ${CONFIG.copyrightName}. All rights reserved.`;
-  $('#ownerBtn').textContent = state.me.owner ? '주인 모드 끄기' : '주인 로그인';
-  $('#ownerBtn').classList.toggle('on', state.me.owner);
-  $('#decorBtn').hidden = !state.me.owner;
-  if (!state.me.owner && !$('#decor').hidden) toggleDecor(false);
+  $('#decorBtn').hidden = !state.me.site;
 }
 function currentView() { const h = location.hash.replace(/^#\/?/, ''); return TYPES[h] ? h : 'home'; }
 function renderNav() {
@@ -490,20 +486,14 @@ function openPost(id) {
   });
 }
 async function startEdit(p) {
-  if (state.me.owner) return openWriteModal(p, '');
   const pw = await askPassword('글 비밀번호', '글을 올릴 때 정한 비밀번호를 입력해 주세요.');
   if (pw === null) return openPost(p.id);
   try { await api('POST', `/posts/${p.id}/verify`, { password: pw }); openWriteModal(p, pw); }
   catch (e) { toast(e.message); openPost(p.id); }
 }
 async function startDelete(p) {
-  let pw = '';
-  if (state.me.owner) { if (!(await confirmBox('이 글을 삭제할까요?', '삭제하면 되돌릴 수 없어요.'))) return openPost(p.id); }
-  else {
-    const v = await askPassword('글 비밀번호', '삭제하려면 글을 올릴 때 정한 비밀번호가 필요해요.');
-    if (v === null) return openPost(p.id);
-    pw = v;
-  }
+  const pw = await askPassword('글 비밀번호', '삭제하려면 글을 올릴 때 정한 비밀번호가 필요해요.');
+  if (pw === null) return openPost(p.id);
   try { await api('DELETE', `/posts/${p.id}`, { password: pw }); closeModal(); toast('삭제했어요.'); await loadPosts(); }
   catch (e) { toast(e.message); openPost(p.id); }
 }
@@ -639,7 +629,7 @@ const tracks = () => state.settings.playlist || [];
 function renderPlayer() {
   const t = tracks()[pl.idx];
   $('#trackTitle').textContent = t ? t.title : '플레이리스트가 비었어요';
-  $('#trackState').textContent = !t ? (state.me.owner ? '목록에서 곡을 추가해 보세요' : ' ') : pl.playing ? 'Now Playing' : 'Paused';
+  $('#trackState').textContent = !t ? '목록(≡)에서 곡을 추가해 보세요' : pl.playing ? 'Now Playing' : 'Paused';
   $('#player').classList.toggle('playing', pl.playing);
   $('#playIcon').innerHTML = pl.playing ? '<path d="M7 5v14M17 5v14" stroke-width="4"/>' : '<path d="M7 4l13 8-13 8z"/>';
   $('#bPlay').setAttribute('aria-label', pl.playing ? '일시정지' : '재생');
@@ -688,8 +678,8 @@ function togglePlay() {
 function openPlaylist() {
   const list = tracks();
   const m = openModal(`<h2>재생 목록</h2>
-   <div class="plist">${list.length ? list.map((t, i) => `<div class="tr-row ${i === pl.idx ? 'cur' : ''}"><button class="go" data-x="play" data-i="${i}">${i + 1}. ${esc(t.title)}</button>${state.me.owner ? `<button class="x" data-x="rm" data-vid="${t.vid}">삭제</button>` : ''}</div>`).join('') : '<div class="empty">아직 곡이 없어요.</div>'}</div>
-   ${state.me.owner ? `<div class="field"><label for="plUrl">유튜브 영상 링크 추가</label><input type="url" id="plUrl" placeholder="https://www.youtube.com/watch?v=..."><div class="err" id="plErr"></div><button class="btn sm" data-x="add" style="align-self:flex-end">추가</button></div>` : '<p class="meta" style="margin-top:14px">곡은 홈 주인이 추가할 수 있어요.</p>'}
+   <div class="plist">${list.length ? list.map((t, i) => `<div class="tr-row ${i === pl.idx ? 'cur' : ''}"><button class="go" data-x="play" data-i="${i}">${i + 1}. ${esc(t.title)}</button><button class="x" data-x="rm" data-vid="${t.vid}">삭제</button></div>`).join('') : '<div class="empty">아직 곡이 없어요.</div>'}</div>
+   <div class="field"><label for="plUrl">유튜브 영상 링크 추가</label><input type="url" id="plUrl" placeholder="https://www.youtube.com/watch?v=..."><div class="err" id="plErr"></div><button class="btn sm" data-x="add" style="align-self:flex-end">추가</button></div>
    <div class="actions"><button class="btn sm" data-x="close">닫기</button></div>`);
   m.addEventListener('click', async (e) => {
     const x = e.target.closest('[data-x]'); if (!x) return;
@@ -735,15 +725,6 @@ document.addEventListener('click', async (e) => {
   if (a === 'open') return openPost(el.dataset.id);
   if (a === 'write') return openWriteModal(null, '', el.dataset.type);
   if (a === 'logout') { await api('POST', '/logout').catch(() => {}); location.hash = ''; location.reload(); return; }
-  if (a === 'owner') {
-    if (state.me.owner) { await api('POST', '/owner-logout').catch(() => {}); state.me.owner = false; renderChrome(); return toast('주인 모드를 껐어요.'); }
-    if (!state.me.ownerEnabled) return toast('주인 비밀번호가 아직 설정되지 않았어요. (README 참고)');
-    const pw = await askPassword('주인 로그인', '꾸미기와 모든 글 관리, 곡 추가를 할 수 있어요.');
-    if (pw === null) return;
-    try { await api('POST', '/owner-login', { password: pw }); state.me.owner = true; renderChrome(); toast('주인 모드예요.'); }
-    catch (ex) { toast(ex.message); }
-    return;
-  }
   if (a === 'decor') return toggleDecor();
   if (a === 'decorClose') return toggleDecor(false);
   if (decorDraft) {
