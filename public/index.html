@@ -24,7 +24,7 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 /* gate */
 #gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
 .gate-card{width:100%;max-width:460px;padding:44px 40px 36px;border-radius:24px;background:rgba(255,255,255,.84);border:1px solid #fff;box-shadow:0 20px 60px rgba(20,70,120,.22);text-align:center}
-.gate-card h1{margin:14px 0 0;font-family:'Gowun Batang',serif;font-size:32px}
+.gate-card h1{margin:14px 0 0;font-family:var(--title-font,'Gowun Batang',serif);font-size:32px}
 .gate-card p{margin:10px 0 0;line-height:1.7;color:var(--muted)}
 .pins{display:flex;justify-content:center;gap:12px;margin-top:26px}
 .pins input{width:64px;height:76px;border-radius:14px;border:2px solid #8fc4ea;background:#fff;text-align:center;font-size:30px;color:var(--ink);font-family:inherit}
@@ -41,9 +41,8 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 .gate-card .btn{width:100%;margin-top:14px;font-size:18px;padding:15px}
 
 /* layout */
-.brand{position:absolute;left:36px;top:28px;z-index:3;padding:8px 16px;border-radius:14px;background:rgba(255,255,255,.6);backdrop-filter:blur(6px)}
-.brand b{display:block;font-family:'Gowun Batang',serif;font-size:26px;color:#0f2a4d}
-.brand span{font-size:14px}
+.brand{position:absolute;left:36px;top:30px;z-index:3}
+.brand b{display:block;font-family:var(--title-font,'Gowun Batang',serif);font-size:30px;color:#0f2a4d;text-shadow:0 0 8px rgba(255,255,255,.9),0 1px 2px rgba(255,255,255,.8)}
 .topbar{position:absolute;right:24px;top:16px;z-index:3;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .pill{border:0;padding:9px 16px;border-radius:999px;background:rgba(255,255,255,.82);color:var(--ink);font-size:14px}
 .pill.on{background:var(--accent);color:#fff}
@@ -91,9 +90,9 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 /* home blocks */
 .latest{flex:1.35 1 380px;min-height:210px}
 .dday{flex:1 1 280px;min-height:210px}
-.dday small{font-size:14px;color:var(--muted)}
+.dday small{font-size:15px;color:var(--muted)}
 .dday .num{display:flex;align-items:baseline;gap:8px}
-.dday .num b{font-family:'Cormorant Garamond',serif;font-size:72px;line-height:1.1;color:var(--accent)}
+.dday .num b{font-family:'Cormorant Garamond',serif;font-size:96px;line-height:1.1;color:var(--accent)}
 .dday .num span{font-family:'Gowun Batang',serif;font-size:24px}
 .bar{height:8px;border-radius:4px;background:#cfe6f5;margin-top:6px}
 .bar i{display:block;height:8px;border-radius:4px;background:var(--accent)}
@@ -169,6 +168,9 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 #decor .two{display:flex;gap:8px;margin-top:10px}
 #decor .two .btn{flex:1;padding:10px 0;font-size:14px;text-align:center}
 #decor input[type=range]{width:100%;accent-color:var(--accent)}
+.fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fontbtn{border:1.5px solid #b3cde8;background:#fff;border-radius:10px;padding:9px 6px;font-size:17px;color:var(--ink)}
+.fontbtn.on{border-color:var(--accent);background:#e3f0fa}
 .swatches{display:flex;gap:12px}
 .swatches button{width:32px;height:32px;border-radius:50%;border:0}
 .swatches button.on{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
@@ -176,7 +178,7 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 .stk img{width:36px;height:36px;object-fit:contain;border-radius:6px;background:#fff}
 .stk input{flex:1}
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;padding:12px 20px;border-radius:999px;background:#17365d;color:#fff;font-size:15px;max-width:90vw}
-footer.cp{position:relative;z-index:2;width:fit-content;margin:0 auto 30px;padding:7px 18px;border-radius:999px;background:rgba(255,255,255,.7);text-align:center;font-size:14px;color:#0f2a4d}
+footer.cp{position:relative;z-index:2;text-align:center;padding:0 0 28px;font-size:13px;color:#0f2a4d;opacity:.8;text-shadow:0 0 6px rgba(255,255,255,.95),0 0 2px rgba(255,255,255,.95)}
 
 @media(max-width:960px){
  .brand{left:12px;top:12px}.brand b{font-size:21px}
@@ -216,7 +218,7 @@ footer.cp{position:relative;z-index:2;width:fit-content;margin:0 auto 30px;paddi
 
 <!-- 본 화면 -->
 <div id="appRoot" hidden>
- <a class="brand" href="#/"><b data-site-title>테아프셉의 바다</b><span id="subtitle"></span></a>
+ <a class="brand" href="#/"><b data-site-title>테아프셉의 바다</b></a>
  <div class="topbar">
   <button class="pill" data-act="write">글·그림 올리기</button>
   <button class="pill" id="ownerBtn" data-act="owner">주인 로그인</button>
@@ -277,9 +279,7 @@ footer.cp{position:relative;z-index:2;width:fit-content;margin:0 auto 30px;paddi
 /* ================= 여기만 바꾸면 돼요 ================= */
 const CONFIG = {
   siteTitle: '테아프셉의 바다',
-  friendName: '',            // 예: '홍길동'  (비워 두면 이름 없이 표시돼요)
-  startDate: '2026-05-05',   // 시작일 = 1일째
-  goalDays: 200,
+  startDate: '2026-05-05',   // 시작일 = 1일째 (YYYY-MM-DD)
   copyrightName: 'zzingae',
   year: 2026
 };
@@ -302,7 +302,24 @@ const NAV = [
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pad = (n) => String(n).padStart(2, '0');
-const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, stickers: [], playlist: [] } };
+const TITLE_FONTS = [
+  { k: 'batang', n: '고운바탕', f: "'Gowun Batang'", q: 'Gowun+Batang:wght@700' },
+  { k: 'myeongjo', n: '나눔명조', f: "'Nanum Myeongjo'", q: 'Nanum+Myeongjo:wght@700' },
+  { k: 'dodum', n: '고운돋움', f: "'Gowun Dodum'", q: 'Gowun+Dodum' },
+  { k: 'jua', n: '주아', f: "'Jua'", q: 'Jua' },
+  { k: 'hanna', n: '블랙한산스', f: "'Black Han Sans'", q: 'Black+Han+Sans' },
+  { k: 'pen', n: '나눔펜', f: "'Nanum Pen Script'", q: 'Nanum+Pen+Script' },
+  { k: 'gaegu', n: '개구', f: "'Gaegu'", q: 'Gaegu:wght@700' },
+  { k: 'dokdo', n: '동해 독도', f: "'East Sea Dokdo'", q: 'East+Sea+Dokdo' },
+  { k: 'cormorant', n: 'Cormorant', f: "'Cormorant Garamond'", q: 'Cormorant+Garamond:wght@600' }
+];
+function loadFont(k) {
+  const f = TITLE_FONTS.find((x) => x.k === k);
+  if (!f || document.getElementById('f_' + k)) return;
+  const l = document.createElement('link'); l.id = 'f_' + k; l.rel = 'stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family=' + f.q + '&display=swap'; document.head.appendChild(l);
+}
+const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, titleFont: 'batang', stickers: [], playlist: [] } };
 let decorDraft = null;
 
 /* ---------- 도우미 ---------- */
@@ -393,7 +410,6 @@ function confirmBox(title, note) {
 function renderChrome() {
   document.querySelectorAll('[data-site-title]').forEach((e) => (e.textContent = CONFIG.siteTitle));
   document.title = CONFIG.siteTitle;
-  $('#subtitle').textContent = (CONFIG.friendName ? CONFIG.friendName + ' 님의 ' : '') + `드림 ${CONFIG.goalDays}일 축하 홈`;
   $('#copyright').textContent = `© ${CONFIG.year} ${CONFIG.copyrightName}. All rights reserved.`;
   $('#ownerBtn').textContent = state.me.owner ? '주인 모드 끄기' : '주인 로그인';
   $('#ownerBtn').classList.toggle('on', state.me.owner);
@@ -413,12 +429,7 @@ function dday() {
   const start = new Date(y, m - 1, d);
   const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const day = Math.round((today - start) / 86400000) + 1;
-  const left = CONFIG.goalDays - day;
-  let text = `${CONFIG.goalDays}일까지 D-${left}`;
-  if (day < 1) text = `시작까지 D-${1 - day}`;
-  else if (left === 0) text = `오늘이 드림 ${CONFIG.goalDays}일이에요!`;
-  else if (left < 0) text = `${CONFIG.goalDays}일 달성 · +${-left}일`;
-  return { day, text, pct: Math.max(0, Math.min(100, (day / CONFIG.goalDays) * 100)) };
+  return { day, label: `${y}년 ${m}월 ${d}일`, before: day < 1 ? 1 - day : 0 };
 }
 
 function renderHome() {
@@ -427,7 +438,6 @@ function renderHome() {
   const letters = P.filter((p) => p.type === 'letter').slice(0, 2);
   const arts = P.filter((p) => p.type === 'art').slice(0, 3);
   const dd = dday();
-  const ds = CONFIG.startDate.replace(/-/g, '.');
   const tile = (p, big) => `<button class="tile${big ? ' big' : ''}" data-act="open" data-id="${p.id}" aria-label="${esc(p.title)}"><img src="${imgUrl(p.imageId)}" alt="" loading="lazy"><span>${big ? esc(p.title) + ' · ' : ''}${esc(p.nickname)}</span></button>`;
   const ph = (big) => `<div class="tile${big ? ' big' : ''}" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px">${big ? '아직 그림이 없어요' : ''}</div>`;
   $('#main').innerHTML = `
@@ -435,9 +445,9 @@ function renderHome() {
     <section class="card latest"><h2>All Latest</h2>
       ${latest.length ? latest.map((p) => `<button class="li" data-act="open" data-id="${p.id}">${chip(p.type)}<span class="t">${esc(p.title)}</span><small>${esc(p.nickname)}</small><small class="tm">${fmtShort(p.createdAt)}</small></button>`).join('') : '<div class="empty">아직 올라온 글이 없어요.<br>첫 글을 남겨 주세요.</div>'}
     </section>
-    <section class="card dday"><small>드림 시작 ${ds} (1일째)</small>
+    <section class="card dday"><small>첫날, ${dd.label}부터 지금까지</small>
       <div class="num"><b>${dd.day >= 1 ? dd.day : '–'}</b><span>일째</span></div>
-      <div class="bar"><i style="width:${dd.pct}%"></i></div><p>${esc(dd.text)}</p>
+      ${dd.before ? `<p>시작까지 D-${dd.before}</p>` : ''}
     </section>
   </div>
   <div class="row">
@@ -558,6 +568,9 @@ function applySettings() {
   const s = state.settings;
   document.documentElement.style.setProperty('--accent', s.accent);
   document.documentElement.style.setProperty('--card-a', s.cardAlpha);
+  const tf = TITLE_FONTS.find((x) => x.k === s.titleFont) || TITLE_FONTS[0];
+  loadFont(tf.k);
+  document.documentElement.style.setProperty('--title-font', tf.f + ",'Gowun Batang',serif");
   $('#bg').style.backgroundImage = s.bg ? `url(${imgUrl(s.bg)})` : 'none';
   const layer = $('#stickers');
   layer.innerHTML = s.stickers.map((k) => `<img class="sticker" data-sid="${k.id}" src="${imgUrl(k.img)}" alt="" draggable="false" style="left:${k.x}vw;top:${k.y}px;width:${k.w}px">`).join('');
@@ -574,12 +587,15 @@ function toggleDecor(force) {
 }
 function renderDecor() {
   const d = decorDraft;
+  TITLE_FONTS.forEach((f) => loadFont(f.k));
   $('#decor').innerHTML = `<h2>꾸미기 <button class="x" data-act="decorClose" aria-label="닫기" style="color:var(--ink);font-size:16px">✕</button></h2>
    <h3>배경화면</h3><div class="prev" style="${d.bg ? `background-image:url(${imgUrl(d.bg)})` : ''}"></div>
    <div class="two"><label class="btn" style="cursor:pointer">이미지 올리기<input type="file" id="dBg" accept="image/*" hidden></label><button class="btn ghost" data-act="dBgReset">기본 바다로</button></div>
    <h3>장식 이미지 (끌어서 옮겨요)</h3>
    <div class="two"><label class="btn" style="cursor:pointer">장식 올리기<input type="file" id="dStk" accept="image/*" hidden></label></div>
    ${d.stickers.map((k) => `<div class="stk"><img src="${imgUrl(k.img)}" alt=""><input type="range" min="40" max="500" value="${k.w}" data-sid="${k.id}" aria-label="장식 크기"><button class="x" data-act="dStkDel" data-sid="${k.id}">삭제</button></div>`).join('')}
+   <h3>제목 글꼴</h3>
+   <div class="fonts">${TITLE_FONTS.map((f) => `<button class="fontbtn ${d.titleFont === f.k ? 'on' : ''}" data-act="dFont" data-k="${f.k}" style="font-family:${f.f},serif">${f.n}</button>`).join('')}</div>
    <h3>카드 투명도</h3><input type="range" id="dAlpha" min="0.3" max="1" step="0.02" value="${d.cardAlpha}">
    <h3>포인트 색</h3><div class="swatches">${ACCENTS.map((c) => `<button style="background:${c}" class="${d.accent === c ? 'on' : ''}" data-act="dAccent" data-c="${c}" aria-label="색 ${c}"></button>`).join('')}</div>
    <div class="two" style="margin-top:22px"><button class="btn" data-act="dSave">저장하기</button></div>
@@ -733,9 +749,10 @@ document.addEventListener('click', async (e) => {
   if (decorDraft) {
     if (a === 'dBgReset') { decorDraft.bg = null; applyDraft(); renderDecor(); }
     if (a === 'dStkDel') { decorDraft.stickers = decorDraft.stickers.filter((s) => s.id !== el.dataset.sid); applyDraft(); renderDecor(); }
+    if (a === 'dFont') { decorDraft.titleFont = el.dataset.k; applyDraft(); renderDecor(); }
     if (a === 'dAccent') { decorDraft.accent = el.dataset.c; document.documentElement.style.setProperty('--accent', decorDraft.accent); renderDecor(); }
     if (a === 'dSave') {
-      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, stickers: decorDraft.stickers }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
+      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, titleFont: decorDraft.titleFont, stickers: decorDraft.stickers }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
       catch (ex) { toast(ex.message); }
     }
   }

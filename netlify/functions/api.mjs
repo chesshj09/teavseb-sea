@@ -5,6 +5,7 @@ import { createHmac, createHash, randomBytes, scryptSync, timingSafeEqual } from
 export const config = { path: "/api/*" };
 
 const TYPES = ["tribute", "art", "poem", "letter"];
+const TITLE_FONTS = ["batang", "myeongjo", "dodum", "jua", "hanna", "pen", "gaegu", "dokdo", "cormorant"];
 const COOKIE_SITE = "tb_site";
 const COOKIE_OWNER = "tb_owner";
 const SITE_TTL = 60 * 60 * 24 * 30; // 30일
@@ -103,7 +104,7 @@ function validatePost(b) {
 }
 
 /* ---------- 설정(꾸미기·플레이리스트) ---------- */
-const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, stickers: [], playlist: [] };
+const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, titleFont: "batang", stickers: [], playlist: [] };
 async function getSettings() {
   const s = (await meta().get("settings", { type: "json" })) || {};
   return { ...DEFAULT_SETTINGS, ...s };
@@ -113,6 +114,7 @@ function sanitizeSettings(b) {
   if ("bg" in b) out.bg = b.bg && ID_RE.test(String(b.bg)) ? String(b.bg) : null;
   if ("accent" in b) out.accent = /^#[0-9a-fA-F]{6}$/.test(String(b.accent)) ? String(b.accent) : DEFAULT_SETTINGS.accent;
   if ("cardAlpha" in b) out.cardAlpha = Math.min(1, Math.max(0.3, Number(b.cardAlpha) || 0.78));
+  if ("titleFont" in b) out.titleFont = TITLE_FONTS.includes(b.titleFont) ? b.titleFont : "batang";
   if (Array.isArray(b.stickers)) {
     out.stickers = b.stickers.slice(0, 30).flatMap((s) => {
       if (!s || !ID_RE.test(String(s.img))) return [];
