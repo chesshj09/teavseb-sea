@@ -1,0 +1,10 @@
+{
+  "name": "teafseb-sea",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "드림 200일 축하 홈페이지",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
