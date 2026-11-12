@@ -17,6 +17,9 @@ a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
 [hidden]{display:none!important}
 #bg{position:fixed;inset:0;background-size:cover;background-position:center;z-index:0;pointer-events:none}
+#bgDim{position:fixed;inset:0;z-index:0;pointer-events:none}
+body.dark .brand b{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+body.dark footer.cp{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7)}
 #stickers{position:absolute;left:0;top:0;width:100%;height:100%;z-index:6;pointer-events:none;overflow:hidden}
 .sticker{position:absolute;user-select:none;-webkit-user-drag:none;touch-action:none}
 body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba(255,255,255,.9);outline-offset:2px}
@@ -196,6 +199,7 @@ footer.cp{position:relative;z-index:2;text-align:center;padding:0 0 28px;font-si
 </head>
 <body>
 <div id="bg"></div>
+<div id="bgDim"></div>
 <div id="stickers"></div>
 
 <!-- 비밀번호 -->
@@ -301,24 +305,31 @@ const NAV = [
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pad = (n) => String(n).padStart(2, '0');
-const TITLE_FONTS = [
-  { k: 'batang', n: '고운바탕', f: "'Gowun Batang'", q: 'Gowun+Batang:wght@700' },
-  { k: 'myeongjo', n: '나눔명조', f: "'Nanum Myeongjo'", q: 'Nanum+Myeongjo:wght@700' },
-  { k: 'dodum', n: '고운돋움', f: "'Gowun Dodum'", q: 'Gowun+Dodum' },
-  { k: 'jua', n: '주아', f: "'Jua'", q: 'Jua' },
-  { k: 'hanna', n: '블랙한산스', f: "'Black Han Sans'", q: 'Black+Han+Sans' },
-  { k: 'pen', n: '나눔펜', f: "'Nanum Pen Script'", q: 'Nanum+Pen+Script' },
-  { k: 'gaegu', n: '개구', f: "'Gaegu'", q: 'Gaegu:wght@700' },
-  { k: 'dokdo', n: '동해 독도', f: "'East Sea Dokdo'", q: 'East+Sea+Dokdo' },
-  { k: 'cormorant', n: 'Cormorant', f: "'Cormorant Garamond'", q: 'Cormorant+Garamond:wght@600' }
-];
-function loadFont(k) {
-  const f = TITLE_FONTS.find((x) => x.k === k);
-  if (!f || document.getElementById('f_' + k)) return;
-  const l = document.createElement('link'); l.id = 'f_' + k; l.rel = 'stylesheet';
-  l.href = 'https://fonts.googleapis.com/css2?family=' + f.q + '&display=swap'; document.head.appendChild(l);
+function parseFontCode(text, nameOverride) {
+  text = String(text || '').replace(/&amp;/g, '&');
+  const links = [];
+  for (const m of text.matchAll(/<link[^>]*href=["']([^"']+)["']/gi)) links.push(m[1]);
+  for (const m of text.matchAll(/@import\s+(?:url\(\s*)?["']?([^"')\s;]+)["']?\s*\)?/gi)) links.push(m[1]);
+  const css = (text.match(/@font-face\s*\{[^}]*\}/gi) || []).join('\n');
+  const generic = /^(serif|sans-serif|monospace|cursive|fantasy|system-ui)$/i;
+  let family = (nameOverride || '').trim().replace(/['"]/g, '');
+  const pick = (re, src) => { const m = src.match(re); return m && !generic.test(m[1].trim()) ? m[1].trim() : ''; };
+  if (!family) family = pick(/font-family\s*:\s*['"]?([^;'"}]+)/i, css);
+  if (!family) family = pick(/font-family\s*:\s*['"]?([^;'",}]+)/i, text);
+  if (!family) for (const l of links) { const m = l.match(/[?&]family=([^&:]+)/i); if (m) { family = decodeURIComponent(m[1]).replace(/\+/g, ' '); break; } }
+  if (!css && !links.length && !family) return { error: '웹폰트 코드를 찾지 못했어요. 눈누나 구글 폰트의 "웹폰트로 이용하기" 코드를 그대로 붙여 넣어 주세요.' };
+  if (!family) return { error: '글꼴 이름을 찾지 못했어요. 아래 "글꼴 이름" 칸에 이름을 적어 주세요.' };
+  return { css, links: [...new Set(links)].slice(0, 3), family };
 }
-const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, titleFont: 'batang', stickers: [], playlist: [] } };
+function applyTitleFont(s) {
+  document.querySelectorAll('[data-cf]').forEach((e) => e.remove());
+  const root = document.documentElement;
+  if (!s.titleFontFamily) return root.style.setProperty('--title-font', "'Gowun Batang',serif");
+  (s.titleFontLinks || []).forEach((h) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = h; l.dataset.cf = '1'; document.head.appendChild(l); });
+  if (s.titleFontCss) { const st = document.createElement('style'); st.dataset.cf = '1'; st.textContent = s.titleFontCss; document.head.appendChild(st); }
+  root.style.setProperty('--title-font', `'${s.titleFontFamily.replace(/['"]/g, '')}','Gowun Batang',serif`);
+}
+const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, bgDim: 0, titleFontFamily: '', titleFontCss: '', titleFontLinks: [], stickers: [], playlist: [] } };
 let decorDraft = null;
 
 /* ---------- 도우미 ---------- */
@@ -558,9 +569,9 @@ function applySettings() {
   const s = state.settings;
   document.documentElement.style.setProperty('--accent', s.accent);
   document.documentElement.style.setProperty('--card-a', s.cardAlpha);
-  const tf = TITLE_FONTS.find((x) => x.k === s.titleFont) || TITLE_FONTS[0];
-  loadFont(tf.k);
-  document.documentElement.style.setProperty('--title-font', tf.f + ",'Gowun Batang',serif");
+  applyTitleFont(s);
+  $('#bgDim').style.background = `rgba(0,0,0,${s.bgDim || 0})`;
+  document.body.classList.toggle('dark', (s.bgDim || 0) >= 0.35);
   $('#bg').style.backgroundImage = s.bg ? `url(${imgUrl(s.bg)})` : 'none';
   const layer = $('#stickers');
   layer.innerHTML = s.stickers.map((k) => `<img class="sticker" data-sid="${k.id}" src="${imgUrl(k.img)}" alt="" draggable="false" style="left:${k.x}vw;top:${k.y}px;width:${k.w}px">`).join('');
@@ -577,15 +588,18 @@ function toggleDecor(force) {
 }
 function renderDecor() {
   const d = decorDraft;
-  TITLE_FONTS.forEach((f) => loadFont(f.k));
   $('#decor').innerHTML = `<h2>꾸미기 <button class="x" data-act="decorClose" aria-label="닫기" style="color:var(--ink);font-size:16px">✕</button></h2>
    <h3>배경화면</h3><div class="prev" style="${d.bg ? `background-image:url(${imgUrl(d.bg)})` : ''}"></div>
    <div class="two"><label class="btn" style="cursor:pointer">이미지 올리기<input type="file" id="dBg" accept="image/*" hidden></label><button class="btn ghost" data-act="dBgReset">기본 바다로</button></div>
+   <h3>배경 어둡게 덮기</h3><input type="range" id="dDim" min="0" max="0.85" step="0.05" value="${d.bgDim || 0}" aria-label="배경 어둡게">
    <h3>장식 이미지 (끌어서 옮겨요)</h3>
    <div class="two"><label class="btn" style="cursor:pointer">장식 올리기<input type="file" id="dStk" accept="image/*" hidden></label></div>
    ${d.stickers.map((k) => `<div class="stk"><img src="${imgUrl(k.img)}" alt=""><input type="range" min="40" max="500" value="${k.w}" data-sid="${k.id}" aria-label="장식 크기"><button class="x" data-act="dStkDel" data-sid="${k.id}">삭제</button></div>`).join('')}
-   <h3>제목 글꼴</h3>
-   <div class="fonts">${TITLE_FONTS.map((f) => `<button class="fontbtn ${d.titleFont === f.k ? 'on' : ''}" data-act="dFont" data-k="${f.k}" style="font-family:${f.f},serif">${f.n}</button>`).join('')}</div>
+   <h3>제목 글꼴 — 웹폰트 코드를 붙여 넣어요</h3>
+   <textarea id="dFontCode" rows="5" placeholder="눈누·구글 폰트의 '웹폰트로 이용하기' 코드를 그대로 붙여 넣어 주세요" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid #b3cde8;font-family:monospace;font-size:12px">${esc(d._fontRaw || '')}</textarea>
+   <input type="text" id="dFontName" placeholder="글꼴 이름 (자동으로 못 찾을 때만)" value="${esc(d._fontName || '')}" style="width:100%;margin-top:6px;padding:9px 10px;border-radius:10px;border:1.5px solid #b3cde8;font-family:inherit;font-size:14px">
+   <div class="two"><button class="btn" data-act="dFontApply">적용해 보기</button><button class="btn ghost" data-act="dFontReset">기본 글꼴로</button></div>
+   <div id="dFontMsg" class="empty" style="font-size:13px">현재: ${esc(d.titleFontFamily || '기본 (고운바탕)')}</div>
    <h3>카드 투명도</h3><input type="range" id="dAlpha" min="0.3" max="1" step="0.02" value="${d.cardAlpha}">
    <h3>포인트 색</h3><div class="swatches">${ACCENTS.map((c) => `<button style="background:${c}" class="${d.accent === c ? 'on' : ''}" data-act="dAccent" data-c="${c}" aria-label="색 ${c}"></button>`).join('')}</div>
    <div class="two" style="margin-top:22px"><button class="btn" data-act="dSave">저장하기</button></div>
@@ -600,6 +614,7 @@ document.addEventListener('change', async (e) => {
 });
 document.addEventListener('input', (e) => {
   if (!decorDraft) return;
+  if (e.target.id === 'dDim') { decorDraft.bgDim = Number(e.target.value); applyDraft(); }
   if (e.target.id === 'dAlpha') { decorDraft.cardAlpha = Number(e.target.value); applyDraft(); }
   if (e.target.matches('.stk input[type=range]')) { const k = decorDraft.stickers.find((s) => s.id === e.target.dataset.sid); if (k) { k.w = Number(e.target.value); applyDraft(); } }
 });
@@ -730,10 +745,18 @@ document.addEventListener('click', async (e) => {
   if (decorDraft) {
     if (a === 'dBgReset') { decorDraft.bg = null; applyDraft(); renderDecor(); }
     if (a === 'dStkDel') { decorDraft.stickers = decorDraft.stickers.filter((s) => s.id !== el.dataset.sid); applyDraft(); renderDecor(); }
-    if (a === 'dFont') { decorDraft.titleFont = el.dataset.k; applyDraft(); renderDecor(); }
+    if (a === 'dFontApply') {
+      const raw = $('#dFontCode').value, nm = $('#dFontName').value;
+      decorDraft._fontRaw = raw; decorDraft._fontName = nm;
+      const r = parseFontCode(raw, nm), msg = $('#dFontMsg');
+      if (r.error) { msg.textContent = r.error; msg.style.color = '#b42340'; return; }
+      decorDraft.titleFontCss = r.css; decorDraft.titleFontLinks = r.links; decorDraft.titleFontFamily = r.family;
+      applyDraft(); msg.style.color = ''; msg.textContent = `적용했어요: ${r.family}  (마음에 들면 맨 아래 '저장하기'를 눌러 주세요)`;
+    }
+    if (a === 'dFontReset') { Object.assign(decorDraft, { titleFontCss: '', titleFontLinks: [], titleFontFamily: '', _fontRaw: '', _fontName: '' }); applyDraft(); renderDecor(); }
     if (a === 'dAccent') { decorDraft.accent = el.dataset.c; document.documentElement.style.setProperty('--accent', decorDraft.accent); renderDecor(); }
     if (a === 'dSave') {
-      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, titleFont: decorDraft.titleFont, stickers: decorDraft.stickers }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
+      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, bgDim: decorDraft.bgDim, titleFontFamily: decorDraft.titleFontFamily, titleFontCss: decorDraft.titleFontCss, titleFontLinks: decorDraft.titleFontLinks, stickers: decorDraft.stickers }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
       catch (ex) { toast(ex.message); }
     }
   }

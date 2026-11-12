@@ -5,7 +5,6 @@ import { createHmac, createHash, randomBytes, scryptSync, timingSafeEqual } from
 export const config = { path: "/api/*" };
 
 const TYPES = ["tribute", "art", "poem", "letter"];
-const TITLE_FONTS = ["batang", "myeongjo", "dodum", "jua", "hanna", "pen", "gaegu", "dokdo", "cormorant"];
 const COOKIE_SITE = "tb_site";
 const COOKIE_OWNER = "tb_owner";
 const SITE_TTL = 60 * 60 * 24 * 30; // 30일
@@ -104,7 +103,7 @@ function validatePost(b) {
 }
 
 /* ---------- 설정(꾸미기·플레이리스트) ---------- */
-const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, titleFont: "batang", stickers: [], playlist: [] };
+const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, bgDim: 0, titleFontFamily: "", titleFontCss: "", titleFontLinks: [], stickers: [], playlist: [] };
 async function getSettings() {
   const s = (await meta().get("settings", { type: "json" })) || {};
   return { ...DEFAULT_SETTINGS, ...s };
@@ -114,7 +113,8 @@ function sanitizeSettings(b) {
   if ("bg" in b) out.bg = b.bg && ID_RE.test(String(b.bg)) ? String(b.bg) : null;
   if ("accent" in b) out.accent = /^#[0-9a-fA-F]{6}$/.test(String(b.accent)) ? String(b.accent) : DEFAULT_SETTINGS.accent;
   if ("cardAlpha" in b) out.cardAlpha = Math.min(1, Math.max(0.3, Number(b.cardAlpha) || 0.78));
-  if ("titleFont" in b) out.titleFont = TITLE_FONTS.includes(b.titleFont) ? b.titleFont : "batang";
+  if ("bgDim" in b) out.bgDim = Math.min(0.85, Math.max(0, Number(b.bgDim) || 0));
+  if ("titleFontFamily" in b || "titleFontCss" in b || "titleFontLinks" in b) Object.assign(out, sanitizeFont(b));
   if (Array.isArray(b.stickers)) {
     out.stickers = b.stickers.slice(0, 30).flatMap((s) => {
       if (!s || !ID_RE.test(String(s.img))) return [];
@@ -123,6 +123,64 @@ function sanitizeSettings(b) {
     });
   }
   return out;
+}
+/* ---- 웹폰트 코드 안전하게 걸러내기 (글꼴 정의와 글꼴 스타일시트 주소만 허용) ---- */
+const FONT_LINK_HOSTS = ["fonts.googleapis.com", "cdn.jsdelivr.net", "fastly.jsdelivr.net", "gcore.jsdelivr.net", "cdnjs.cloudflare.com", "hangeul.pstatic.net", "fonts.cdnfonts.com", "unpkg.com", "spoqa.github.io"];
+const FF_PROPS = new Set(["font-family", "src", "font-weight", "font-style", "font-display", "unicode-range", "font-stretch"]);
+function safeUrl(u) {
+  try {
+    const x = new URL(String(u).trim());
+    return x.protocol === "https:" && !/[\s"'()<>\\]/.test(String(u).trim()) ? x.href : null;
+  } catch {
+    return null;
+  }
+}
+function sanitizeFontCss(raw) {
+  const out = [];
+  const blocks = String(raw || "").match(/@font-face\s*\{[^}]*\}/gi) || [];
+  for (const blk of blocks.slice(0, 12)) {
+    const body = blk.slice(blk.indexOf("{") + 1, blk.lastIndexOf("}"));
+    const decls = [];
+    for (const d of body.split(";")) {
+      const i = d.indexOf(":");
+      if (i < 0) continue;
+      const prop = d.slice(0, i).trim().toLowerCase();
+      const val = d.slice(i + 1).trim();
+      const badChars = prop === "src" ? /[<>{}\\]/ : /[<>{}\\@]/;
+      if (!FF_PROPS.has(prop) || !val || badChars.test(val) || /expression|javascript/i.test(val)) continue;
+      if (prop === "font-family" && !/^['"]?[\w\s\-가-힣.]+['"]?$/.test(val)) continue;
+      if (/^(font-weight|font-style|font-display|font-stretch)$/.test(prop) && !/^[\w\s\-%.]+$/.test(val)) continue;
+      if (prop === "unicode-range" && !/^[Uu+0-9a-fA-F\-?,\s]+$/.test(val)) continue;
+      if (prop === "src") {
+        const urls = [...val.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi)];
+        if (!urls.length || urls.some((m) => !safeUrl(m[2]))) continue;
+        const rest = val
+          .replace(/url\(\s*(['"]?)[^'")]+\1\s*\)/gi, "")
+          .replace(/format\(\s*(['"]?)[\w\-]+\1\s*\)/gi, "")
+          .replace(/tech\([^)]*\)/gi, "")
+          .replace(/local\(\s*(['"]?)[^'")]+\1\s*\)/gi, "");
+        if (/[^\s,]/.test(rest)) continue;
+      }
+      decls.push(`${prop}:${val}`);
+    }
+    if (decls.some((d) => d.startsWith("font-family:")) && decls.some((d) => d.startsWith("src:"))) out.push(`@font-face{${decls.join(";")}}`);
+  }
+  return out.join("\n").slice(0, 6000);
+}
+function sanitizeFont(b) {
+  const css = sanitizeFontCss(b.titleFontCss);
+  const links = (Array.isArray(b.titleFontLinks) ? b.titleFontLinks : [])
+    .slice(0, 3)
+    .map(safeUrl)
+    .filter((u) => u && FONT_LINK_HOSTS.includes(new URL(u).hostname));
+  let family = String(b.titleFontFamily || "").replace(/['"]/g, "").trim();
+  if (!/^[\w\s\-가-힣.]{1,60}$/.test(family)) family = "";
+  if (!family && css) {
+    const m = css.match(/font-family:\s*['"]?([^;'"}]+)/i);
+    if (m && /^[\w\s\-가-힣.]{1,60}$/.test(m[1].trim())) family = m[1].trim();
+  }
+  if (!family) return { titleFontFamily: "", titleFontCss: "", titleFontLinks: [] };
+  return { titleFontFamily: family, titleFontCss: css, titleFontLinks: links };
 }
 const YT_RE = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/;
 async function youtubeTitle(vid) {
