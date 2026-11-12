@@ -103,7 +103,7 @@ function validatePost(b) {
 }
 
 /* ---------- 설정(꾸미기·플레이리스트) ---------- */
-const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, bgDim: 0, titleFontFamily: "", titleFontCss: "", titleFontLinks: [], stickers: [], playlist: [] };
+const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, bgDim: 0, titleFontFamily: "", titleFontCss: "", titleFontLinks: [], bodyFontFamily: "", bodyFontCss: "", bodyFontLinks: [], stickers: [], playlist: [] };
 async function getSettings() {
   const s = (await meta().get("settings", { type: "json" })) || {};
   return { ...DEFAULT_SETTINGS, ...s };
@@ -114,7 +114,9 @@ function sanitizeSettings(b) {
   if ("accent" in b) out.accent = /^#[0-9a-fA-F]{6}$/.test(String(b.accent)) ? String(b.accent) : DEFAULT_SETTINGS.accent;
   if ("cardAlpha" in b) out.cardAlpha = Math.min(1, Math.max(0.3, Number(b.cardAlpha) || 0.78));
   if ("bgDim" in b) out.bgDim = Math.min(0.85, Math.max(0, Number(b.bgDim) || 0));
-  if ("titleFontFamily" in b || "titleFontCss" in b || "titleFontLinks" in b) Object.assign(out, sanitizeFont(b));
+  for (const role of ["title", "body"]) {
+    if ((role + "FontFamily") in b || (role + "FontCss") in b || (role + "FontLinks") in b) Object.assign(out, sanitizeFont(b, role));
+  }
   if (Array.isArray(b.stickers)) {
     out.stickers = b.stickers.slice(0, 30).flatMap((s) => {
       if (!s || !ID_RE.test(String(s.img))) return [];
@@ -167,20 +169,20 @@ function sanitizeFontCss(raw) {
   }
   return out.join("\n").slice(0, 6000);
 }
-function sanitizeFont(b) {
-  const css = sanitizeFontCss(b.titleFontCss);
-  const links = (Array.isArray(b.titleFontLinks) ? b.titleFontLinks : [])
+function sanitizeFont(b, role) {
+  const css = sanitizeFontCss(b[role + "FontCss"]);
+  const links = (Array.isArray(b[role + "FontLinks"]) ? b[role + "FontLinks"] : [])
     .slice(0, 3)
     .map(safeUrl)
     .filter((u) => u && FONT_LINK_HOSTS.includes(new URL(u).hostname));
-  let family = String(b.titleFontFamily || "").replace(/['"]/g, "").trim();
+  let family = String(b[role + "FontFamily"] || "").replace(/['"]/g, "").trim();
   if (!/^[\w\s\-가-힣.]{1,60}$/.test(family)) family = "";
   if (!family && css) {
     const m = css.match(/font-family:\s*['"]?([^;'"}]+)/i);
     if (m && /^[\w\s\-가-힣.]{1,60}$/.test(m[1].trim())) family = m[1].trim();
   }
-  if (!family) return { titleFontFamily: "", titleFontCss: "", titleFontLinks: [] };
-  return { titleFontFamily: family, titleFontCss: css, titleFontLinks: links };
+  if (!family) return { [role + "FontFamily"]: "", [role + "FontCss"]: "", [role + "FontLinks"]: [] };
+  return { [role + "FontFamily"]: family, [role + "FontCss"]: css, [role + "FontLinks"]: links };
 }
 const YT_RE = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/;
 async function youtubeTitle(vid) {

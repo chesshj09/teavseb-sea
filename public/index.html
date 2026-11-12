@@ -10,7 +10,7 @@
 :root{--accent:#1f68a8;--card-a:.78;--ink:#17365d;--muted:#3a5a82;--line:#b7d9ee}
 *{box-sizing:border-box}
 html{background:#4f9fd6}
-body{margin:0;min-height:100vh;position:relative;font-family:'Gowun Dodum',sans-serif;color:var(--ink);
+body{margin:0;min-height:100vh;position:relative;font-family:var(--body-font,'Gowun Dodum',sans-serif);color:var(--ink);
  background:radial-gradient(ellipse 700px 180px at 18% 14%,rgba(255,255,255,.55),transparent 70%),radial-gradient(ellipse 900px 220px at 78% 8%,rgba(255,255,255,.5),transparent 70%),radial-gradient(ellipse 800px 200px at 30% 70%,rgba(255,255,255,.45),transparent 70%),radial-gradient(ellipse 700px 180px at 85% 85%,rgba(255,255,255,.5),transparent 70%),linear-gradient(170deg,#a8dcf5 0%,#7cc0e8 45%,#4f9fd6 100%);background-attachment:fixed;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0;background:repeating-linear-gradient(8deg,rgba(255,255,255,.12) 0 2px,transparent 2px 38px);pointer-events:none;z-index:0}
 a{color:inherit;text-decoration:none}
@@ -96,7 +96,7 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 .dday small{font-size:15px;color:var(--muted)}
 .dday .num{display:flex;align-items:baseline;gap:8px}
 .dday .num b{font-family:'Cormorant Garamond',serif;font-size:96px;line-height:1.1;color:var(--accent)}
-.dday .num span{font-family:'Gowun Batang',serif;font-size:24px}
+.dday .num span{font-family:var(--text-font,'Gowun Batang',serif);font-size:24px}
 .bar{height:8px;border-radius:4px;background:#cfe6f5;margin-top:6px}
 .bar i{display:block;height:8px;border-radius:4px;background:var(--accent)}
 .dday p{margin:8px 0 0;text-align:right;font-size:15px}
@@ -122,14 +122,14 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 
 /* category pages */
 .pagehead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-.pagehead h1{margin:0;font-family:'Gowun Batang',serif;font-size:28px}
+.pagehead h1{margin:0;font-family:var(--text-font,'Gowun Batang',serif);font-size:28px}
 .pagehead p{margin:4px 0 0;color:var(--muted);font-size:14px}
 .stack{display:flex;flex-direction:column;gap:14px}
 .postcard{display:block;width:100%;text-align:left;border:0;padding:18px 22px;border-radius:14px;background:rgba(255,255,255,var(--card-a));color:var(--ink);box-shadow:0 8px 30px rgba(20,70,120,.12)}
-.postcard h3{margin:0;font-family:'Gowun Batang',serif;font-size:20px}
+.postcard h3{margin:0;font-family:var(--text-font,'Gowun Batang',serif);font-size:20px}
 .postcard .meta{font-size:13px;color:var(--muted);margin-top:4px}
 .postcard p{margin:10px 0 0;font-size:15px;line-height:1.8;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
-.poem p{font-family:'Cormorant Garamond','Gowun Batang',serif;font-size:19px}
+.poem p{font-family:'Cormorant Garamond',var(--text-font,'Gowun Batang',serif);font-size:19px}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .gallery .tile{aspect-ratio:4/5}
 
@@ -137,17 +137,17 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 .overlay{position:fixed;inset:0;z-index:40;background:rgba(15,42,77,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
 .modal{width:100%;max-width:640px;background:#fff;border-radius:20px;padding:28px 30px;box-shadow:0 24px 70px rgba(15,42,77,.4);margin:auto}
 .modal.small{max-width:380px}
-.modal h2{margin:0 0 4px;font-family:'Gowun Batang',serif;font-size:24px}
+.modal h2{margin:0 0 4px;font-family:var(--text-font,'Gowun Batang',serif);font-size:24px}
 .modal .meta{font-size:14px;color:var(--muted)}
-.modal .text{margin:18px 0 0;font-family:'Gowun Batang',serif;font-size:18px;line-height:2;white-space:pre-wrap;word-break:break-word}
-.modal .text.en{font-family:'Cormorant Garamond','Gowun Batang',serif;font-size:22px;line-height:1.7}
-.modal .tr{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-family:'Gowun Batang',serif;font-size:16px;line-height:1.9;color:var(--muted);white-space:pre-wrap}
+.modal .text{margin:18px 0 0;font-family:var(--text-font,'Gowun Batang',serif);font-size:18px;line-height:2;white-space:pre-wrap;word-break:break-word}
+.modal .text.en{font-family:'Cormorant Garamond',var(--text-font,'Gowun Batang',serif);font-size:22px;line-height:1.7}
+.modal .tr{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-family:var(--text-font,'Gowun Batang',serif);font-size:16px;line-height:1.9;color:var(--muted);white-space:pre-wrap}
 .modal img.pic{display:block;max-width:100%;max-height:70vh;margin:16px auto 0;border-radius:12px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px;justify-content:flex-end}
 .field{margin-top:16px;display:flex;flex-direction:column;gap:6px}
 .field label{font-size:14px;color:var(--muted)}
 .field input[type=text],.field input[type=password],.field input[type=url],.field textarea{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid #b3cde8;font-family:inherit;font-size:16px;color:var(--ink);background:#fff}
-.field textarea{min-height:170px;line-height:1.8;resize:vertical;font-family:'Gowun Batang',serif;font-size:17px}
+.field textarea{min-height:170px;line-height:1.8;resize:vertical;font-family:var(--text-font,'Gowun Batang',serif);font-size:17px}
 .field input:focus,.field textarea:focus{outline:3px solid rgba(31,104,168,.25);border-color:var(--accent)}
 .field small{font-size:13px;color:var(--muted)}
 .types{display:flex;gap:8px;flex-wrap:wrap}
@@ -165,7 +165,7 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 #decorBtn{position:fixed;left:36px;bottom:26px;z-index:20;display:flex;align-items:center;gap:8px;height:46px;padding:0 20px 0 14px;border:0;border-radius:999px;background:var(--accent);color:#fff;font-size:15px;box-shadow:0 6px 16px rgba(31,104,168,.4)}
 #decorBtn svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #decor{position:fixed;right:24px;top:70px;bottom:24px;width:300px;z-index:30;overflow:auto;padding:20px;border-radius:18px;background:rgba(255,255,255,.95);box-shadow:0 16px 44px rgba(20,70,120,.3)}
-#decor h2{margin:0;font-family:'Gowun Batang',serif;font-size:21px;display:flex;justify-content:space-between;align-items:center}
+#decor h2{margin:0;font-family:var(--text-font,'Gowun Batang',serif);font-size:21px;display:flex;justify-content:space-between;align-items:center}
 #decor h3{margin:18px 0 8px;font-size:14px;font-weight:400;color:var(--muted)}
 #decor .prev{height:88px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(170deg,#a8dcf5,#4f9fd6) center/cover}
 #decor .two{display:flex;gap:8px;margin-top:10px}
@@ -321,15 +321,20 @@ function parseFontCode(text, nameOverride) {
   if (!family) return { error: '글꼴 이름을 찾지 못했어요. 아래 "글꼴 이름" 칸에 이름을 적어 주세요.' };
   return { css, links: [...new Set(links)].slice(0, 3), family };
 }
-function applyTitleFont(s) {
+function applyFonts(s) {
   document.querySelectorAll('[data-cf]').forEach((e) => e.remove());
   const root = document.documentElement;
-  if (!s.titleFontFamily) return root.style.setProperty('--title-font', "'Gowun Batang',serif");
-  (s.titleFontLinks || []).forEach((h) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = h; l.dataset.cf = '1'; document.head.appendChild(l); });
-  if (s.titleFontCss) { const st = document.createElement('style'); st.dataset.cf = '1'; st.textContent = s.titleFontCss; document.head.appendChild(st); }
-  root.style.setProperty('--title-font', `'${s.titleFontFamily.replace(/['"]/g, '')}','Gowun Batang',serif`);
+  for (const role of ['title', 'body']) {
+    const fam = (s[role + 'FontFamily'] || '').replace(/['"]/g, '');
+    const vars = role === 'title' ? ['--title-font'] : ['--body-font', '--text-font'];
+    const defs = role === 'title' ? ["'Gowun Batang',serif"] : ["'Gowun Dodum',sans-serif", "'Gowun Batang',serif"];
+    if (!fam) { vars.forEach((v, i) => root.style.setProperty(v, defs[i])); continue; }
+    (s[role + 'FontLinks'] || []).forEach((u) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = u; l.dataset.cf = role; document.head.appendChild(l); });
+    if (s[role + 'FontCss']) { const st = document.createElement('style'); st.dataset.cf = role; st.textContent = s[role + 'FontCss']; document.head.appendChild(st); }
+    vars.forEach((v, i) => root.style.setProperty(v, `'${fam}',${defs[i]}`));
+  }
 }
-const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, bgDim: 0, titleFontFamily: '', titleFontCss: '', titleFontLinks: [], stickers: [], playlist: [] } };
+const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, bgDim: 0, titleFontFamily: '', titleFontCss: '', titleFontLinks: [], bodyFontFamily: '', bodyFontCss: '', bodyFontLinks: [], stickers: [], playlist: [] } };
 let decorDraft = null;
 
 /* ---------- 도우미 ---------- */
@@ -569,7 +574,7 @@ function applySettings() {
   const s = state.settings;
   document.documentElement.style.setProperty('--accent', s.accent);
   document.documentElement.style.setProperty('--card-a', s.cardAlpha);
-  applyTitleFont(s);
+  applyFonts(s);
   $('#bgDim').style.background = `rgba(0,0,0,${s.bgDim || 0})`;
   document.body.classList.toggle('dark', (s.bgDim || 0) >= 0.35);
   $('#bg').style.backgroundImage = s.bg ? `url(${imgUrl(s.bg)})` : 'none';
@@ -587,6 +592,7 @@ function toggleDecor(force) {
   else if (decorDraft) { decorDraft = null; applySettings(); }
 }
 function renderDecor() {
+  const role = (decorDraft && decorDraft._fontRole) || 'title';
   const d = decorDraft;
   $('#decor').innerHTML = `<h2>꾸미기 <button class="x" data-act="decorClose" aria-label="닫기" style="color:var(--ink);font-size:16px">✕</button></h2>
    <h3>배경화면</h3><div class="prev" style="${d.bg ? `background-image:url(${imgUrl(d.bg)})` : ''}"></div>
@@ -595,11 +601,12 @@ function renderDecor() {
    <h3>장식 이미지 (끌어서 옮겨요)</h3>
    <div class="two"><label class="btn" style="cursor:pointer">장식 올리기<input type="file" id="dStk" accept="image/*" hidden></label></div>
    ${d.stickers.map((k) => `<div class="stk"><img src="${imgUrl(k.img)}" alt=""><input type="range" min="40" max="500" value="${k.w}" data-sid="${k.id}" aria-label="장식 크기"><button class="x" data-act="dStkDel" data-sid="${k.id}">삭제</button></div>`).join('')}
-   <h3>제목 글꼴 — 웹폰트 코드를 붙여 넣어요</h3>
-   <textarea id="dFontCode" rows="5" placeholder="눈누·구글 폰트의 '웹폰트로 이용하기' 코드를 그대로 붙여 넣어 주세요" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid #b3cde8;font-family:monospace;font-size:12px">${esc(d._fontRaw || '')}</textarea>
+   <h3>글꼴 — 웹폰트 코드를 붙여 넣어요</h3>
+   <div class="two"><button class="btn ${role === 'title' ? '' : 'ghost'}" data-act="dFontRole" data-r="title">제목</button><button class="btn ${role === 'body' ? '' : 'ghost'}" data-act="dFontRole" data-r="body">본문·그 외 전체</button></div>
+   <textarea id="dFontCode" rows="5" placeholder="눈누·구글 폰트의 '웹폰트로 이용하기' 코드를 그대로 붙여 넣어 주세요" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1.5px solid #b3cde8;font-family:monospace;font-size:12px">${esc(d._fontRaw || '')}</textarea>
    <input type="text" id="dFontName" placeholder="글꼴 이름 (자동으로 못 찾을 때만)" value="${esc(d._fontName || '')}" style="width:100%;margin-top:6px;padding:9px 10px;border-radius:10px;border:1.5px solid #b3cde8;font-family:inherit;font-size:14px">
    <div class="two"><button class="btn" data-act="dFontApply">적용해 보기</button><button class="btn ghost" data-act="dFontReset">기본 글꼴로</button></div>
-   <div id="dFontMsg" class="empty" style="font-size:13px">현재: ${esc(d.titleFontFamily || '기본 (고운바탕)')}</div>
+   <div id="dFontMsg" class="empty" style="font-size:13px">현재 ${role === 'title' ? '제목' : '본문'}: ${esc(d[role + 'FontFamily'] || '기본 (고운 글꼴)')}</div>
    <h3>카드 투명도</h3><input type="range" id="dAlpha" min="0.3" max="1" step="0.02" value="${d.cardAlpha}">
    <h3>포인트 색</h3><div class="swatches">${ACCENTS.map((c) => `<button style="background:${c}" class="${d.accent === c ? 'on' : ''}" data-act="dAccent" data-c="${c}" aria-label="색 ${c}"></button>`).join('')}</div>
    <div class="two" style="margin-top:22px"><button class="btn" data-act="dSave">저장하기</button></div>
@@ -745,18 +752,20 @@ document.addEventListener('click', async (e) => {
   if (decorDraft) {
     if (a === 'dBgReset') { decorDraft.bg = null; applyDraft(); renderDecor(); }
     if (a === 'dStkDel') { decorDraft.stickers = decorDraft.stickers.filter((s) => s.id !== el.dataset.sid); applyDraft(); renderDecor(); }
+    if (a === 'dFontRole') { decorDraft._fontRole = el.dataset.r; decorDraft._fontRaw = ''; decorDraft._fontName = ''; renderDecor(); }
     if (a === 'dFontApply') {
+      const role = decorDraft._fontRole || 'title';
       const raw = $('#dFontCode').value, nm = $('#dFontName').value;
       decorDraft._fontRaw = raw; decorDraft._fontName = nm;
       const r = parseFontCode(raw, nm), msg = $('#dFontMsg');
       if (r.error) { msg.textContent = r.error; msg.style.color = '#b42340'; return; }
-      decorDraft.titleFontCss = r.css; decorDraft.titleFontLinks = r.links; decorDraft.titleFontFamily = r.family;
+      decorDraft[role + 'FontCss'] = r.css; decorDraft[role + 'FontLinks'] = r.links; decorDraft[role + 'FontFamily'] = r.family;
       applyDraft(); msg.style.color = ''; msg.textContent = `적용했어요: ${r.family}  (마음에 들면 맨 아래 '저장하기'를 눌러 주세요)`;
     }
-    if (a === 'dFontReset') { Object.assign(decorDraft, { titleFontCss: '', titleFontLinks: [], titleFontFamily: '', _fontRaw: '', _fontName: '' }); applyDraft(); renderDecor(); }
+    if (a === 'dFontReset') { const role = decorDraft._fontRole || 'title'; decorDraft[role + 'FontCss'] = ''; decorDraft[role + 'FontLinks'] = []; decorDraft[role + 'FontFamily'] = ''; decorDraft._fontRaw = ''; decorDraft._fontName = ''; applyDraft(); renderDecor(); }
     if (a === 'dAccent') { decorDraft.accent = el.dataset.c; document.documentElement.style.setProperty('--accent', decorDraft.accent); renderDecor(); }
     if (a === 'dSave') {
-      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, bgDim: decorDraft.bgDim, titleFontFamily: decorDraft.titleFontFamily, titleFontCss: decorDraft.titleFontCss, titleFontLinks: decorDraft.titleFontLinks, stickers: decorDraft.stickers }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
+      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, bgDim: decorDraft.bgDim, titleFontFamily: decorDraft.titleFontFamily, titleFontCss: decorDraft.titleFontCss, titleFontLinks: decorDraft.titleFontLinks, bodyFontFamily: decorDraft.bodyFontFamily, bodyFontCss: decorDraft.bodyFontCss, bodyFontLinks: decorDraft.bodyFontLinks, stickers: decorDraft.stickers }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
       catch (ex) { toast(ex.message); }
     }
   }
