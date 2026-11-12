@@ -93,13 +93,14 @@ function validatePost(b) {
   const title = clean(b.title, 80);
   const body = clean(b.body, 20000);
   const body2 = clean(b.body2, 20000);
+  const author = type === "poem" ? clean(b.author, 60) : "";
   const imageId = b.imageId ? String(b.imageId) : "";
   if (!nickname) return { error: "닉네임을 입력해 주세요." };
   if (!title) return { error: "제목을 입력해 주세요." };
   if (type !== "art" && !body) return { error: "내용을 입력해 주세요." };
   if (imageId && !ID_RE.test(imageId)) return { error: "이미지 정보가 올바르지 않아요." };
   if (type === "art" && !imageId) return { error: "그림 이미지를 올려 주세요." };
-  return { data: { type, nickname, title, body, body2, imageId } };
+  return { data: { type, nickname, title, author, body, body2, imageId } };
 }
 
 /* ---------- 설정(꾸미기·플레이리스트) ---------- */

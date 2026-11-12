@@ -136,6 +136,18 @@ body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba
 /* modal */
 .overlay{position:fixed;inset:0;z-index:40;background:rgba(15,42,77,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
 .modal{width:100%;max-width:640px;background:#fff;border-radius:20px;padding:28px 30px;box-shadow:0 24px 70px rgba(15,42,77,.4);margin:auto}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pair>div{padding:18px 20px;white-space:pre-wrap;word-break:break-word;line-height:1.9}
+.pair .en{font-family:'Cormorant Garamond',var(--text-font,'Gowun Batang',serif);font-size:21px;line-height:1.7;background:rgba(31,104,168,.05)}
+.pair .ko{font-family:var(--text-font,'Gowun Batang',serif);font-size:16px;color:var(--muted);border-left:1px solid var(--line)}
+.pair .hd{font-size:12px;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-family:inherit}
+.modal.wide{max-width:960px}
+.author{font-size:15px;color:var(--accent);margin-top:2px;font-style:italic}
+.postcard .pair{margin-top:10px}
+.postcard .pair>div{padding:10px 14px;font-size:14px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.wpair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wpair textarea{min-height:260px}
+@media(max-width:700px){.pair,.wpair{grid-template-columns:1fr}.pair .ko{border-left:0;border-top:1px solid var(--line)}}
 .modal.small{max-width:380px}
 .modal h2{margin:0 0 4px;font-family:var(--text-font,'Gowun Batang',serif);font-size:24px}
 .modal .meta{font-size:14px;color:var(--muted)}
@@ -291,7 +303,7 @@ const CONFIG = {
 const TYPES = {
   tribute: { label: '헌정 글', chip: '#2a5a9c', page: '헌정 글', desc: '드림하는 분께 바치는 글을 모아요.' },
   art:     { label: '해저 그림', chip: '#1b7f86', page: '해저 갤러리', desc: '바닷속 그림들을 모아요.' },
-  poem:    { label: '영시', chip: '#4b5fb0', page: '테아프셉을 위한 영시', desc: '영어로 쓴 시와 한글 해석을 나란히 놓아요.' },
+  poem:    { label: '영시', chip: '#4b5fb0', page: '테아프셉을 위한 영시', desc: '영시 원문과 한국어 번역을 양옆에 나란히 놓아요.' },
   letter:  { label: '축하 편지', chip: '#1f68a8', page: '축하 편지', desc: '드림 200일을 축하하는 편지예요.' }
 };
 const NAV = [
@@ -478,7 +490,7 @@ function renderList(type) {
   let body = '';
   if (!list.length) body = `<div class="card empty">아직 올라온 글이 없어요.<br><button class="btn sm" data-act="write" data-type="${type}">첫 글 남기기</button></div>`;
   else if (type === 'art') body = `<div class="gallery">${list.map((p) => `<button class="tile" data-act="open" data-id="${p.id}" aria-label="${esc(p.title)}"><img src="${imgUrl(p.imageId)}" alt="" loading="lazy"><span>${esc(p.title)} · ${esc(p.nickname)}</span></button>`).join('')}</div>`;
-  else body = `<div class="stack">${list.map((p) => `<button class="postcard ${type === 'poem' ? 'poem' : ''}" data-act="open" data-id="${p.id}"><h3>${esc(p.title)}</h3><div class="meta">${esc(p.nickname)} · ${fmtFull(p.createdAt)}</div><p>${esc(p.body)}</p></button>`).join('')}</div>`;
+  else body = `<div class="stack">${list.map((p) => `<button class="postcard ${type === 'poem' ? 'poem' : ''}" data-act="open" data-id="${p.id}"><h3>${esc(p.title)}</h3>${p.type === 'poem' && p.author ? `<div class="author">by ${esc(p.author)}</div>` : ''}<div class="meta">${esc(p.nickname)} · ${fmtFull(p.createdAt)}</div>${p.type === 'poem' ? `<div class="pair"><div class="en">${esc(p.body)}</div><div class="ko">${esc(p.body2 || '')}</div></div>` : `<p>${esc(p.body)}</p>`}</button>`).join('')}</div>`;
   $('#main').innerHTML = `<div class="pagehead"><div><h1>${esc(T.page)}</h1><p>${esc(T.desc)}</p></div><button class="btn sm" data-act="write" data-type="${type}">여기에 올리기</button></div>${body}`;
 }
 function render() { renderNav(); const v = currentView(); v === 'home' ? renderHome() : renderList(v); window.scrollTo(0, 0); }
@@ -489,11 +501,12 @@ function openPost(id) {
   const T = TYPES[p.type];
   const m = openModal(`<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">${chip(p.type)}</div>
     <h2>${esc(p.title)}</h2>
+    ${p.type === 'poem' && p.author ? `<div class="author">by ${esc(p.author)}</div>` : ''}
     <div class="meta">${esc(p.nickname)} · ${fmtFull(p.createdAt)}${p.updatedAt > p.createdAt + 1000 ? ' (수정됨)' : ''}</div>
     ${p.imageId ? `<img class="pic" src="${imgUrl(p.imageId)}" alt="${esc(p.title)}">` : ''}
-    ${p.body ? `<div class="text ${p.type === 'poem' ? 'en' : ''}">${esc(p.body)}</div>` : ''}
-    ${p.body2 ? `<div class="tr">${esc(p.body2)}</div>` : ''}
+    ${p.type === 'poem' ? `<div class="pair"><div class="en"><div class="hd">ENGLISH</div>${esc(p.body)}</div><div class="ko"><div class="hd">한국어 번역</div>${esc(p.body2 || '')}</div></div>` : `${p.body ? `<div class="text">${esc(p.body)}</div>` : ''}${p.body2 ? `<div class="tr">${esc(p.body2)}</div>` : ''}`}
     <div class="actions"><button class="btn ghost sm" data-x="edit">수정</button><button class="btn ghost sm" data-x="del">삭제</button><button class="btn sm" data-x="close">닫기</button></div>`);
+  if (p.type === 'poem') m.classList.add('wide');
   m.addEventListener('click', async (e) => {
     const x = e.target.closest('[data-x]'); if (!x) return;
     if (x.dataset.x === 'close') return closeModal();
@@ -522,8 +535,9 @@ function openWriteModal(post, pw, presetType) {
     <div class="field"><div class="types" id="wTypes">${Object.entries(TYPES).map(([k, t]) => `<button type="button" data-type="${k}" ${editing ? 'disabled' : ''}>${t.label}</button>`).join('')}</div></div>
     <div class="field"><label for="wNick">닉네임</label><input type="text" id="wNick" maxlength="20" placeholder="축하해 주는 분의 닉네임"></div>
     <div class="field"><label for="wTitle">제목</label><input type="text" id="wTitle" maxlength="80"></div>
-    <div class="field"><label for="wBody" id="wBodyL">내용</label><textarea id="wBody" maxlength="20000"></textarea></div>
-    <div class="field" id="wBody2Box"><label for="wBody2">한글 해석 (선택)</label><textarea id="wBody2" maxlength="20000" style="min-height:110px"></textarea></div>
+    <div class="field" id="wAuthorBox"><label for="wAuthor">작가 (선택)</label><input type="text" id="wAuthor" maxlength="60" placeholder="예: Emily Dickinson"></div>
+    <div class="wpair" id="wPair"><div class="field"><label for="wBody" id="wBodyL">내용</label><textarea id="wBody" maxlength="20000"></textarea></div>
+    <div class="field" id="wBody2Box"><label for="wBody2">한국어 번역 (선택)</label><textarea id="wBody2" maxlength="20000"></textarea></div></div>
     <div class="field"><label for="wFile" id="wFileL">이미지 (선택)</label><input type="file" id="wFile" accept="image/*"><img id="wPrev" class="preview" alt="" hidden></div>
     ${editing ? '' : '<div class="field"><label for="wPw">글 비밀번호 (4자 이상)</label><input type="password" id="wPw" maxlength="40" autocomplete="new-password"><small>나중에 이 글을 고치거나 지울 때 필요해요. 꼭 기억해 주세요.</small></div>'}
     <div class="err" id="wErr" role="alert"></div>
@@ -532,12 +546,15 @@ function openWriteModal(post, pw, presetType) {
   const sync = () => {
     m.querySelectorAll('#wTypes button').forEach((b) => b.classList.toggle('on', b.dataset.type === type));
     $m('#wBody2Box').hidden = type !== 'poem';
-    $m('#wBodyL').textContent = type === 'poem' ? '시 (영어)' : type === 'art' ? '그림 설명 (선택)' : type === 'letter' ? '편지 내용' : '내용';
+    $m('#wAuthorBox').hidden = type !== 'poem';
+    $m('#wPair').style.gridTemplateColumns = type === 'poem' ? '' : '1fr';
+    m.classList.toggle('wide', type === 'poem');
+    $m('#wBodyL').textContent = type === 'poem' ? '영시 원문' : type === 'art' ? '그림 설명 (선택)' : type === 'letter' ? '편지 내용' : '내용';
     $m('#wFileL').textContent = type === 'art' ? '그림 이미지 (필수)' : '이미지 (선택)';
   };
   const nickSaved = localStorage.getItem('tb_nick') || '';
   $m('#wNick').value = post ? post.nickname : nickSaved;
-  if (post) { $m('#wTitle').value = post.title; $m('#wBody').value = post.body; $m('#wBody2').value = post.body2 || ''; if (post.imageId) { $m('#wPrev').src = imgUrl(post.imageId); $m('#wPrev').hidden = false; } }
+  if (post) { $m('#wTitle').value = post.title; $m('#wBody').value = post.body; $m('#wBody2').value = post.body2 || ''; $m('#wAuthor').value = post.author || ''; if (post.imageId) { $m('#wPrev').src = imgUrl(post.imageId); $m('#wPrev').hidden = false; } }
   sync();
   $m('#wTypes').addEventListener('click', (e) => { const b = e.target.closest('button[data-type]'); if (b && !b.disabled) { type = b.dataset.type; sync(); } });
   $m('#wFile').addEventListener('change', (e) => {
@@ -549,7 +566,7 @@ function openWriteModal(post, pw, presetType) {
     if (x.dataset.x === 'cancel') return closeModal();
     if (x.dataset.x !== 'save') return;
     const err = $m('#wErr'); err.textContent = '';
-    const nickname = $m('#wNick').value.trim(), title = $m('#wTitle').value.trim(), body = $m('#wBody').value, body2 = $m('#wBody2').value;
+    const nickname = $m('#wNick').value.trim(), title = $m('#wTitle').value.trim(), body = $m('#wBody').value, body2 = $m('#wBody2').value, author = $m('#wAuthor').value;
     if (!nickname) return (err.textContent = '닉네임을 입력해 주세요.');
     if (!title) return (err.textContent = '제목을 입력해 주세요.');
     if (type !== 'art' && !body.trim()) return (err.textContent = '내용을 입력해 주세요.');
@@ -560,7 +577,7 @@ function openWriteModal(post, pw, presetType) {
     try {
       let imageId = post ? post.imageId || '' : '';
       if (file) imageId = await uploadImage(file, 'post');
-      const payload = { type, nickname, title, body, body2: type === 'poem' ? body2 : '', imageId, password };
+      const payload = { type, nickname, title, body, body2: type === 'poem' ? body2 : '', author: type === 'poem' ? author : '', imageId, password };
       if (editing) await api('PUT', `/posts/${post.id}`, payload); else await api('POST', '/posts', payload);
       localStorage.setItem('tb_nick', nickname);
       closeModal(); toast(editing ? '고쳤어요.' : '올렸어요!');
