@@ -122,7 +122,7 @@ function sanitizeSettings(b) {
     out.stickers = b.stickers.slice(0, 30).flatMap((s) => {
       if (!s || !ID_RE.test(String(s.img))) return [];
       const num = (v, lo, hi, d) => Math.min(hi, Math.max(lo, Number(v) || d));
-      return [{ id: String(s.id || newId()).replace(/[^a-z0-9]/gi, "").slice(0, 24) || newId(), img: String(s.img), x: num(s.x, 0, 100, 10), y: num(s.y, 0, 6000, 100), w: num(s.w, 20, 800, 160) }];
+      return [{ id: String(s.id || newId()).replace(/[^a-z0-9]/gi, "").slice(0, 24) || newId(), img: String(s.img), u: s.u ? 1 : 0, x: num(s.x, 0, s.u ? 1600 : 100, s.u ? 160 : 10), y: num(s.y, 0, 6000, 100), w: num(s.w, 20, 1200, 160) }];
     });
   }
   return out;

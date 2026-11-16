@@ -21,6 +21,11 @@ button{font-family:inherit;cursor:pointer}
 body.dark .brand b{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.6)}
 body.dark footer.cp{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7)}
 #stickers{position:absolute;left:0;top:0;width:100%;height:100%;z-index:6;pointer-events:none;overflow:hidden}
+/* 고정 비율 무대: 데스크톱에서는 1600px 폭 화면을 창 폭에 맞춰 통째로 확대·축소 */
+@media(min-width:961px){
+ #appRoot{position:absolute;left:0;top:0;width:1600px;transform-origin:0 0;transform:scale(var(--s,1))}
+ .app{max-width:none;width:1600px;margin:0}
+}
 .sticker{position:absolute;user-select:none;-webkit-user-drag:none;touch-action:none}
 body.decorating .sticker{pointer-events:auto;cursor:move;outline:2px dashed rgba(255,255,255,.9);outline-offset:2px}
 
@@ -206,13 +211,13 @@ footer.cp{position:relative;z-index:2;text-align:center;padding:0 0 28px;font-si
  .content{width:100%}
  .letters{width:100%}
  #decor{top:auto;height:70vh;left:12px;right:12px;width:auto;bottom:80px}
+ #stickers{display:none}
 }
 </style>
 </head>
 <body>
 <div id="bg"></div>
 <div id="bgDim"></div>
-<div id="stickers"></div>
 
 <!-- 비밀번호 -->
 <div id="gate" hidden>
@@ -234,6 +239,7 @@ footer.cp{position:relative;z-index:2;text-align:center;padding:0 0 28px;font-si
 
 <!-- 본 화면 -->
 <div id="appRoot" hidden>
+ <div id="stickers"></div>
  <a class="brand" href="#/"><b data-site-title>테아프셉의 바다</b></a>
  <div class="topbar">
   <button class="pill" data-act="write">글·그림 올리기</button>
@@ -283,9 +289,9 @@ footer.cp{position:relative;z-index:2;text-align:center;padding:0 0 28px;font-si
  </div>
  <footer class="cp" id="copyright"></footer>
 
+</div>
  <button id="decorBtn" data-act="decor" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.4 2.6a2 2 0 012.8 2.8L11 15.6 7 16.6l1-4z"/><path d="M7 16.6C5 16.6 4 18 4 20c2 0 4.4-.6 4-3.4"/></svg>꾸미기</button>
  <aside id="decor" hidden></aside>
-</div>
 <div id="ytbox"></div>
 <div id="modalRoot"></div>
 <div id="toast" hidden></div>
@@ -346,6 +352,16 @@ function applyFonts(s) {
     vars.forEach((v, i) => root.style.setProperty(v, `'${fam}',${defs[i]}`));
   }
 }
+const STAGE_W = 1600;
+function stageScale() { const w = document.documentElement.clientWidth; return w > 960 ? w / STAGE_W : 1; }
+function fitStage() {
+  const root = $('#appRoot'), sc = stageScale();
+  document.documentElement.style.setProperty('--s', sc);
+  document.body.style.minHeight = sc === 1 ? '' : Math.max(innerHeight, Math.ceil(root.offsetHeight * sc)) + 'px';
+}
+addEventListener('resize', fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe($('#appRoot'));
+function migrateStickers(list) { (list || []).forEach((k) => { if (!k.u) { k.x = Math.round(k.x * STAGE_W) / 100; k.u = 1; } }); return list; }
 const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, bgDim: 0, titleFontFamily: '', titleFontCss: '', titleFontLinks: [], bodyFontFamily: '', bodyFontCss: '', bodyFontLinks: [], stickers: [], playlist: [] } };
 let decorDraft = null;
 
@@ -590,6 +606,7 @@ function openWriteModal(post, pw, presetType) {
 /* ---------- 꾸미기 (주인 전용) ---------- */
 function applySettings() {
   const s = state.settings;
+  migrateStickers(s.stickers);
   document.documentElement.style.setProperty('--accent', s.accent);
   document.documentElement.style.setProperty('--card-a', s.cardAlpha);
   applyFonts(s);
@@ -597,7 +614,7 @@ function applySettings() {
   document.body.classList.toggle('dark', (s.bgDim || 0) >= 0.35);
   $('#bg').style.backgroundImage = s.bg ? `url(${imgUrl(s.bg)})` : 'none';
   const layer = $('#stickers');
-  layer.innerHTML = s.stickers.map((k) => `<img class="sticker" data-sid="${k.id}" src="${imgUrl(k.img)}" alt="" draggable="false" style="left:${k.x}vw;top:${k.y}px;width:${k.w}px">`).join('');
+  layer.innerHTML = s.stickers.map((k) => `<img class="sticker" data-sid="${k.id}" src="${imgUrl(k.img)}" alt="" draggable="false" style="left:${k.x}px;top:${k.y}px;width:${k.w}px">`).join('');
   layer.style.height = Math.max(document.documentElement.scrollHeight, window.innerHeight) + 'px';
 }
 const ACCENTS = ['#1f68a8', '#1b7f86', '#4b5fb0', '#17365d'];
@@ -634,7 +651,7 @@ document.addEventListener('change', async (e) => {
   if (!decorDraft) return;
   try {
     if (e.target.id === 'dBg' && e.target.files[0]) { toast('올리는 중…'); decorDraft.bg = await uploadImage(e.target.files[0], 'decor', { max: 2200, q: 0.82 }); state.settings = { ...state.settings, ...{} }; applyDraft(); renderDecor(); }
-    if (e.target.id === 'dStk' && e.target.files[0]) { toast('올리는 중…'); const img = await uploadImage(e.target.files[0], 'decor', { max: 700, type: 'image/png' }); decorDraft.stickers.push({ id: Math.random().toString(36).slice(2, 10), img, x: 8 + decorDraft.stickers.length * 4, y: 140 + decorDraft.stickers.length * 40, w: 160 }); applyDraft(); renderDecor(); }
+    if (e.target.id === 'dStk' && e.target.files[0]) { toast('올리는 중…'); const img = await uploadImage(e.target.files[0], 'decor', { max: 700, type: 'image/png' }); decorDraft.stickers.push({ id: Math.random().toString(36).slice(2, 10), img, u: 1, x: 120 + decorDraft.stickers.length * 60, y: 160 + decorDraft.stickers.length * 40, w: 160 }); applyDraft(); renderDecor(); }
   } catch (ex) { toast(ex.message); }
 });
 document.addEventListener('input', (e) => {
@@ -656,9 +673,10 @@ function applyDraft() {
   });
   document.addEventListener('pointermove', (e) => {
     if (!drag) return;
-    drag.k.x = Math.max(0, Math.min(100, drag.ox + ((e.clientX - drag.sx) / window.innerWidth) * 100));
-    drag.k.y = Math.max(0, drag.oy + (e.clientY - drag.sy));
-    drag.el.style.left = drag.k.x + 'vw'; drag.el.style.top = drag.k.y + 'px';
+    const sc = stageScale();
+    drag.k.x = Math.max(0, Math.min(STAGE_W, drag.ox + (e.clientX - drag.sx) / sc));
+    drag.k.y = Math.max(0, drag.oy + (e.clientY - drag.sy) / sc);
+    drag.el.style.left = drag.k.x + 'px'; drag.el.style.top = drag.k.y + 'px';
   });
   document.addEventListener('pointerup', () => { drag = null; });
 })();
