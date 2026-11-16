@@ -352,6 +352,23 @@ function applyFonts(s) {
     vars.forEach((v, i) => root.style.setProperty(v, `'${fam}',${defs[i]}`));
   }
 }
+let curToken = 0;
+function applyCursor(c) {
+  const token = ++curToken; let st = document.getElementById('curStyle');
+  if (!c || !c.img) { if (st) st.remove(); return; }
+  const img = new Image();
+  img.onload = () => {
+    if (token !== curToken) return;
+    const size = Math.min(128, Math.max(16, c.size || 32)), k = size / Math.max(img.naturalWidth, img.naturalHeight);
+    const w = Math.max(1, Math.round(img.naturalWidth * k)), hgt = Math.max(1, Math.round(img.naturalHeight * k));
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = hgt;
+    cv.getContext('2d').drawImage(img, 0, 0, w, hgt);
+    const hx = c.hot === 'c' ? Math.round(w / 2) : 0, hy = c.hot === 'c' ? Math.round(hgt / 2) : 0;
+    if (!st) { st = document.createElement('style'); st.id = 'curStyle'; document.head.appendChild(st); }
+    st.textContent = `html,html *,body *{cursor:url("${cv.toDataURL('image/png')}") ${hx} ${hy},auto !important}`;
+  };
+  img.src = imgUrl(c.img);
+}
 const STAGE_W = 1600;
 function stageScale() { const w = document.documentElement.clientWidth; return w > 960 ? Math.min(1, w / STAGE_W) : 1; }
 function fitStage() {
@@ -363,7 +380,7 @@ function fitStage() {
 addEventListener('resize', fitStage);
 if (window.ResizeObserver) new ResizeObserver(fitStage).observe($('#appRoot'));
 function migrateStickers(list) { (list || []).forEach((k) => { if (!k.u) { k.x = Math.round(k.x * STAGE_W) / 100; k.u = 1; } }); return list; }
-const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, bgDim: 0, titleFontFamily: '', titleFontCss: '', titleFontLinks: [], bodyFontFamily: '', bodyFontCss: '', bodyFontLinks: [], stickers: [], playlist: [] } };
+const state = { me: { site: false, owner: false, ownerEnabled: false }, posts: [], settings: { bg: null, accent: '#1f68a8', cardAlpha: 0.78, bgDim: 0, titleFontFamily: '', titleFontCss: '', titleFontLinks: [], bodyFontFamily: '', bodyFontCss: '', bodyFontLinks: [], stickers: [], cursor: null, playlist: [] } };
 let decorDraft = null;
 
 /* ---------- 도우미 ---------- */
@@ -608,6 +625,7 @@ function openWriteModal(post, pw, presetType) {
 function applySettings() {
   const s = state.settings;
   migrateStickers(s.stickers);
+  applyCursor(s.cursor);
   document.documentElement.style.setProperty('--accent', s.accent);
   document.documentElement.style.setProperty('--card-a', s.cardAlpha);
   applyFonts(s);
@@ -643,6 +661,11 @@ function renderDecor() {
    <input type="text" id="dFontName" placeholder="글꼴 이름 (자동으로 못 찾을 때만)" value="${esc(d._fontName || '')}" style="width:100%;margin-top:6px;padding:9px 10px;border-radius:10px;border:1.5px solid #b3cde8;font-family:inherit;font-size:14px">
    <div class="two"><button class="btn" data-act="dFontApply">적용해 보기</button><button class="btn ghost" data-act="dFontReset">기본 글꼴로</button></div>
    <div id="dFontMsg" class="empty" style="font-size:13px">현재 ${role === 'title' ? '제목' : '본문'}: ${esc(d[role + 'FontFamily'] || '기본 (고운 글꼴)')}</div>
+   <h3>마우스 커서</h3>
+   <div class="two"><label class="btn" style="cursor:pointer">커서 이미지 올리기<input type="file" id="dCur" accept="image/*" hidden></label><button class="btn ghost" data-act="dCurReset">기본 커서로</button></div>
+   ${d.cursor ? `<div class="stk"><img src="${imgUrl(d.cursor.img)}" alt=""><input type="range" id="dCurSize" min="16" max="128" step="2" value="${d.cursor.size}" aria-label="커서 크기"><span style="font-size:12px;min-width:44px;text-align:right">${d.cursor.size}px</span></div>
+   <div class="two"><button class="btn ${d.cursor.hot === 'tl' ? '' : 'ghost'}" data-act="dCurHot" data-h="tl">클릭: 왼쪽 위</button><button class="btn ${d.cursor.hot === 'c' ? '' : 'ghost'}" data-act="dCurHot" data-h="c">클릭: 가운데</button></div>
+   <p class="empty" style="font-size:12px">이미지의 어느 지점이 실제 클릭되는 자리인지 골라요. 기본은 왼쪽 위예요. 너무 크면 일부 브라우저에서 기본 커서로 보일 수 있어요(128px까지).</p>` : '<p class="empty" style="font-size:12px">PNG(투명 배경)를 올리면 마우스 커서가 그 그림으로 바뀌어요.</p>'}
    <h3>카드 투명도</h3><input type="range" id="dAlpha" min="0.3" max="1" step="0.02" value="${d.cardAlpha}">
    <h3>포인트 색</h3><div class="swatches">${ACCENTS.map((c) => `<button style="background:${c}" class="${d.accent === c ? 'on' : ''}" data-act="dAccent" data-c="${c}" aria-label="색 ${c}"></button>`).join('')}</div>
    <div class="two" style="margin-top:22px"><button class="btn" data-act="dSave">저장하기</button></div>
@@ -652,12 +675,14 @@ document.addEventListener('change', async (e) => {
   if (!decorDraft) return;
   try {
     if (e.target.id === 'dBg' && e.target.files[0]) { toast('올리는 중…'); decorDraft.bg = await uploadImage(e.target.files[0], 'decor', { max: 2200, q: 0.82 }); state.settings = { ...state.settings, ...{} }; applyDraft(); renderDecor(); }
+    if (e.target.id === 'dCur' && e.target.files[0]) { toast('올리는 중…'); const img = await uploadImage(e.target.files[0], 'decor', { max: 256, type: 'image/png' }); decorDraft.cursor = { img, size: decorDraft.cursor ? decorDraft.cursor.size : 32, hot: decorDraft.cursor ? decorDraft.cursor.hot : 'tl' }; applyDraft(); renderDecor(); }
     if (e.target.id === 'dStk' && e.target.files[0]) { toast('올리는 중…'); const img = await uploadImage(e.target.files[0], 'decor', { max: 700, type: 'image/png' }); decorDraft.stickers.push({ id: Math.random().toString(36).slice(2, 10), img, u: 1, x: 120 + decorDraft.stickers.length * 60, y: 160 + decorDraft.stickers.length * 40, w: 160 }); applyDraft(); renderDecor(); }
   } catch (ex) { toast(ex.message); }
 });
 document.addEventListener('input', (e) => {
   if (!decorDraft) return;
   if (e.target.id === 'dDim') { decorDraft.bgDim = Number(e.target.value); applyDraft(); }
+  if (e.target.id === 'dCurSize' && decorDraft.cursor) { decorDraft.cursor.size = Number(e.target.value); e.target.nextElementSibling.textContent = decorDraft.cursor.size + 'px'; applyDraft(); }
   if (e.target.id === 'dAlpha') { decorDraft.cardAlpha = Number(e.target.value); applyDraft(); }
   if (e.target.matches('.stk input[type=range]')) { const k = decorDraft.stickers.find((s) => s.id === e.target.dataset.sid); if (k) { k.w = Number(e.target.value); applyDraft(); } }
 });
@@ -788,6 +813,8 @@ document.addEventListener('click', async (e) => {
   if (a === 'decor') return toggleDecor();
   if (a === 'decorClose') return toggleDecor(false);
   if (decorDraft) {
+    if (a === 'dCurReset') { decorDraft.cursor = null; applyDraft(); renderDecor(); }
+    if (a === 'dCurHot' && decorDraft.cursor) { decorDraft.cursor.hot = el.dataset.h; applyDraft(); renderDecor(); }
     if (a === 'dBgReset') { decorDraft.bg = null; applyDraft(); renderDecor(); }
     if (a === 'dStkDel') { decorDraft.stickers = decorDraft.stickers.filter((s) => s.id !== el.dataset.sid); applyDraft(); renderDecor(); }
     if (a === 'dFontRole') { decorDraft._fontRole = el.dataset.r; decorDraft._fontRaw = ''; decorDraft._fontName = ''; renderDecor(); }
@@ -803,7 +830,7 @@ document.addEventListener('click', async (e) => {
     if (a === 'dFontReset') { const role = decorDraft._fontRole || 'title'; decorDraft[role + 'FontCss'] = ''; decorDraft[role + 'FontLinks'] = []; decorDraft[role + 'FontFamily'] = ''; decorDraft._fontRaw = ''; decorDraft._fontName = ''; applyDraft(); renderDecor(); }
     if (a === 'dAccent') { decorDraft.accent = el.dataset.c; document.documentElement.style.setProperty('--accent', decorDraft.accent); renderDecor(); }
     if (a === 'dSave') {
-      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, bgDim: decorDraft.bgDim, titleFontFamily: decorDraft.titleFontFamily, titleFontCss: decorDraft.titleFontCss, titleFontLinks: decorDraft.titleFontLinks, bodyFontFamily: decorDraft.bodyFontFamily, bodyFontCss: decorDraft.bodyFontCss, bodyFontLinks: decorDraft.bodyFontLinks, stickers: decorDraft.stickers }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
+      try { const r = await api('PUT', '/settings', { bg: decorDraft.bg, accent: decorDraft.accent, cardAlpha: decorDraft.cardAlpha, bgDim: decorDraft.bgDim, titleFontFamily: decorDraft.titleFontFamily, titleFontCss: decorDraft.titleFontCss, titleFontLinks: decorDraft.titleFontLinks, bodyFontFamily: decorDraft.bodyFontFamily, bodyFontCss: decorDraft.bodyFontCss, bodyFontLinks: decorDraft.bodyFontLinks, stickers: decorDraft.stickers, cursor: decorDraft.cursor }); state.settings = r.settings; decorDraft = null; toggleDecor(false); applySettings(); toast('저장했어요.'); }
       catch (ex) { toast(ex.message); }
     }
   }

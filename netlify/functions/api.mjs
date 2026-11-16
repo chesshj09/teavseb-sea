@@ -104,7 +104,7 @@ function validatePost(b) {
 }
 
 /* ---------- 설정(꾸미기·플레이리스트) ---------- */
-const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, bgDim: 0, titleFontFamily: "", titleFontCss: "", titleFontLinks: [], bodyFontFamily: "", bodyFontCss: "", bodyFontLinks: [], stickers: [], playlist: [] };
+const DEFAULT_SETTINGS = { bg: null, accent: "#1f68a8", cardAlpha: 0.78, bgDim: 0, titleFontFamily: "", titleFontCss: "", titleFontLinks: [], bodyFontFamily: "", bodyFontCss: "", bodyFontLinks: [], stickers: [], cursor: null, playlist: [] };
 async function getSettings() {
   const s = (await meta().get("settings", { type: "json" })) || {};
   return { ...DEFAULT_SETTINGS, ...s };
@@ -117,6 +117,10 @@ function sanitizeSettings(b) {
   if ("bgDim" in b) out.bgDim = Math.min(0.85, Math.max(0, Number(b.bgDim) || 0));
   for (const role of ["title", "body"]) {
     if ((role + "FontFamily") in b || (role + "FontCss") in b || (role + "FontLinks") in b) Object.assign(out, sanitizeFont(b, role));
+  }
+  if ("cursor" in b) {
+    const c = b.cursor;
+    out.cursor = c && ID_RE.test(String(c.img)) ? { img: String(c.img), size: Math.min(128, Math.max(16, Math.round(Number(c.size)) || 32)), hot: c.hot === "c" ? "c" : "tl" } : null;
   }
   if (Array.isArray(b.stickers)) {
     out.stickers = b.stickers.slice(0, 30).flatMap((s) => {
